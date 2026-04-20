@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>danixsik — lyrics maker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0b110d;
+  --bg2:       #0f1712;
+  --panel:     #121a14;
+  --panel2:    #162019;
+  --border:    rgba(120,200,140,0.08);
+  --border2:   rgba(120,200,140,0.14);
+  --accent1:   #7c3aed;
+  --accent2:   #a855f7;
+  --accent3:   #c084fc;
+  --grad:      linear-gradient(135deg, #7c3aed, #a855f7);
+  --grad2:     linear-gradient(135deg, #6d28d9, #7c3aed);
+  --grad-soft: linear-gradient(135deg, rgba(124,58,237,0.35), rgba(168,85,247,0.33));
+  --text:      #ffffff;
+  --dim:       #ffffff;
+  --dim2:      rgba(255,255,255,0.88);
+  --font:      'Inter', Arial, sans-serif;
+  --display:   'Space Grotesk', Arial, sans-serif;
+  --r:         12px;
+  --r-sm:      8px;
+  --r-lg:      16px;
+}
+
+html, body { height: 100%; overflow: hidden; background: #0b110d; }
+
+body {
+  background: #0b110d;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+}
+.logo {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #ffffff;
+}
+.logo-sub {
+  font-size: 9px;
+  letter-spacing: 0;
+  color: var(--dim2);
+  text-transform: none;
+  margin-left: 2px;
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tbtn {
+  padding: 8px 18px;
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tbtn:hover { transform: translateY(-1px); }
+.tbtn:active { transform: translateY(0); }
+.tbtn-ghost {
+  background: rgba(124,58,237,0.32);
+  border: 1px solid rgba(124,58,237,0.50);
+  color: #ffffff;
+}
+.tbtn-ghost:hover { background: rgba(124,58,237,0.42); border-color: rgba(168,85,247,0.75); }
+.tbtn-red {
+  background: var(--grad);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(124,58,237,0.55);
+}
+.tbtn-red:hover { box-shadow: 0 6px 24px rgba(124,58,237,0.70); }
+.tbtn:disabled { opacity: .3; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── LAYOUT ── */
+.app {
+  display: grid;
+  grid-template-columns: 300px 1fr 240px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── LEFT ── */
+.left {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 18px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--panel);
+}
+.left::-webkit-scrollbar { width: 3px; }
+.left::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.45); border-radius: 2px; }
+
+.slabel {
+  font-size: 9px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--dim2);
+  margin-bottom: 8px;
+  display: block;
+  font-weight: 500;
+}
+
+/* Upload zone */
+.upload-zone {
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  display: block;
+  transition: all .25s;
+  background: var(--grad-soft);
+}
+.upload-zone:hover {
+  border-color: rgba(168,85,247,0.70);
+  background: rgba(124,58,237,0.32);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(124,58,237,0.35);
+}
+.upload-icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+  display: block;
+  color: #ffffff;
+  opacity: 0.9;
+}
+.upload-zone p { font-size: 10px; color: var(--dim); letter-spacing: 0; }
+.upload-name { font-size: 9px; color: var(--accent3); margin-top: 5px; letter-spacing: 0; opacity: 0.85; }
+
+/* Waveform handled by .player-wave */
+
+/* Textarea */
+textarea.lyrics {
+  width: 100%;
+  background: #4a5528;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--r);
+  color: rgba(255,255,255,0.92);
+  font-family: var(--font);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 2;
+  padding: 12px 14px;
+  resize: none;
+  outline: none;
+  height: 130px;
+  transition: border-color .2s, box-shadow .2s;
+}
+textarea.lyrics:focus {
+  border-color: rgba(168,85,247,0.75);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.32);
+}
+textarea.lyrics::placeholder { color: rgba(255,255,255,0.88); }
+
+/* Btn row */
+.btn-row { display: flex; gap: 8px; margin-top: 8px; }
+.sbtn {
+  padding: 9px 14px;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all .2s;
+  border: 1px solid var(--border2);
+  background: rgba(124,58,237,0.28);
+  color: #ffffff;
+}
+.sbtn:hover {
+  border-color: rgba(168,85,247,0.70);
+  color: #ffffff;
+  background: rgba(124,58,237,0.38);
+}
+.sbtn.main {
+  flex: 1;
+  background: rgba(100,40,200,0.4);
+  color: #ffffff;
+  border-color: rgba(168,85,247,0.6);
+}
+.sbtn.main:hover {
+  background: rgba(124,58,237,0.45);
+  box-shadow: 0 4px 16px rgba(124,58,237,0.40);
+}
+
+/* Play section */
+/* ── PLAYER ── */
+.player-card {
+  background: rgba(124,58,237,0.10);
+  border: 1px solid rgba(168,85,247,0.22);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.player-wave {
+  width: 100%;
+  height: 56px;
+  display: block;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  background: rgba(0,0,0,0.25);
+}
+.player-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  margin-top: -4px;
+}
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.play-btn {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: var(--grad);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all .2s;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.5);
+}
+.play-btn:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(124,58,237,0.65); }
+.play-btn:active { transform: scale(0.95); }
+.play-btn.active { background: linear-gradient(135deg,#6d28d9,#7c3aed); }
+.seek-wrap { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.seek-bar {
+  -webkit-appearance: none;
+  width: 100%; height: 5px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+.seek-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  transition: transform .1s;
+}
+.seek-bar::-webkit-slider-thumb:active { transform: scale(1.35); }
+.vol-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+}
+.vol-bar {
+  -webkit-appearance: none;
+  flex: 1; height: 3px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.vol-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: rgba(192,132,252,0.9);
+  cursor: pointer;
+}
+.timing-label {
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255,255,255,0.55);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.timing-label .pill {
+  background: rgba(124,58,237,0.44);
+  border: 1px solid rgba(168,85,247,0.60);
+  color: #d8b4fe;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.next-txt {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Style controls */
+.style-section { display: flex; flex-direction: column; gap: 12px; }
+.ctrl-row { display: flex; gap: 12px; }
+.ctrl { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.ctrl .slabel { margin-bottom: 0; }
+
+.color-block {
+  height: 30px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .15s, box-shadow .15s;
+}
+.color-block:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+.color-block input[type=color] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.color-bg { width: 100%; height: 100%; transition: background .1s; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  background: rgba(255,255,255,0.68);
+  outline: none;
+  border-radius: 3px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--grad);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124,58,237,0.70);
+}
+
+select {
+  background: rgba(124,58,237,0.26);
+  border: 1px solid var(--border2);
+  color: rgba(255,255,255,1.00);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color .2s;
+}
+select:focus { border-color: rgba(168,85,247,0.70); }
+select option { background: #1a1a1a; }
+
+.range-row { display: flex; align-items: center; gap: 8px; }
+.range-val { font-size: 10px; color: var(--accent2); letter-spacing: 0; flex-shrink: 0; font-weight: 500; }
+
+.outline-row { display: flex; align-items: center; gap: 8px; }
+input[type=checkbox] {
+  accent-color: var(--accent1);
+  cursor: pointer;
+  width: 14px; height: 14px;
+  border-radius: 4px;
+}
+
+.font-upload {
+  border: 1px dashed rgba(124,58,237,0.45);
+  border-radius: var(--r-sm);
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  display: block;
+  transition: all .2s;
+  background: rgba(124,58,237,0.24);
+}
+.font-upload:hover { border-color: rgba(168,85,247,0.70); background: rgba(124,58,237,0.30); }
+.font-upload p { font-size: 11px; color: rgba(255,255,255,0.88); letter-spacing: 0; }
+
+/* ── CENTER ── */
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #080e0a;
+  padding: 28px;
+  position: relative;
+  gap: 18px;
+}
+.preview-top-label {
+  position: absolute;
+  top: 16px; left: 20px;
+  font-size: 9px;
+  letter-spacing: 0;
+  color: rgba(255,255,255,0.68);
+  text-transform: none;
+}
+
+.canvas-wrap {
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+  position: relative;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(124,58,237,0.40), 0 24px 60px rgba(0,0,0,0.7);
+}
+#previewCanvas { width: 100%; height: 100%; display: block; }
+
+.space-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 9px;
+  letter-spacing: 0;
+  color: rgba(255,255,255,0.88);
+  text-transform: none;
+}
+.space-key {
+  padding: 4px 18px;
+  border: 1px solid rgba(255,255,255,0.68);
+  border-radius: var(--r-sm);
+  font-size: 9px;
+  color: rgba(255,255,255,0.88);
+  letter-spacing: 0;
+  transition: all .1s;
+  background: rgba(255,255,255,0.68);
+}
+.space-key.flash {
+  border-color: rgba(168,85,247,0.85);
+  color: var(--accent3);
+  background: rgba(124,58,237,0.30);
+  box-shadow: 0 0 12px rgba(124,58,237,0.40);
+}
+
+/* ── RIGHT ── */
+.right {
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+.right::-webkit-scrollbar { width: 3px; }
+.right::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.40); border-radius: 2px; }
+
+.right-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.right-header .slabel { margin-bottom: 0; }
+.space-tag {
+  font-size: 8px;
+  letter-spacing: 0;
+  color: rgba(168,85,247,0.80);
+  text-transform: none;
+}
+
+.line-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all .15s;
+  margin-bottom: 3px;
+}
+.line-item:hover { background: rgba(124,58,237,0.28); border-color: rgba(124,58,237,0.35); }
+.line-item.active {
+  border-color: rgba(168,85,247,0.60);
+  background: rgba(124,58,237,0.32);
+  box-shadow: 0 2px 12px rgba(124,58,237,0.32);
+}
+.line-item.done { border-color: rgba(168,85,247,0.37); }
+.line-item.done .lnum { color: var(--accent2); }
+.lnum { font-size: 8px; color: rgba(255,255,255,0.68); width: 14px; flex-shrink: 0; text-align: right; font-weight: 500; }
+.ltext { font-size: 11px; color: #ffffff; flex: 1; }
+.line-item.active .ltext { color: #ffffff; font-weight: 500; }
+.ltime { font-size: 8px; color: rgba(168,85,247,0.85); flex-shrink: 0; }
+
+/* ── BOTTOM ── */
+.bottom {
+  height: 36px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 14px;
+  flex-shrink: 0;
+  background: var(--panel);
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.68);
+  transition: all .3s;
+  flex-shrink: 0;
+}
+.status-dot.on {
+  background: var(--accent2);
+  box-shadow: 0 0 8px rgba(168,85,247,0.85);
+}
+.status-msg {
+  font-size: 9px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255,255,255,0.68);
+}
+.exp-bar { flex: 1; height: 2px; background: rgba(255,255,255,0.68); border-radius: 1px; overflow: hidden; }
+.exp-fill { height: 100%; width: 0%; background: var(--grad); transition: width .05s; border-radius: 1px; }
+.bottom-logo {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: rgba(255,255,255,0.25);
+  flex-shrink: 0;
+}
+
+/* ── MOBILE TAB BAR ── */
+.tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  background: rgba(15,23,18,0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border2);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 0 8px;
+  font-family: var(--font);
+  font-size: 8px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #ffffff;
+  background: transparent;
+  border: none;
+  border-top: 2px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn .tab-icon { font-size: 15px; line-height: 1; }
+.tab-btn.active {
+  color: var(--accent3);
+  border-top-color: var(--accent2);
+  text-shadow: 0 0 12px rgba(168,85,247,0.75);
+}
+
+/* Tap button */
+.tap-btn {
+  display: none;
+  width: 100%;
+  padding: 16px;
+  background: rgba(124,58,237,0.32);
+  border: 1px solid rgba(168,85,247,0.60);
+  border-radius: var(--r);
+  color: #ffffff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+  transition: all .2s;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+}
+.tap-btn:active {
+  background: rgba(124,58,237,0.45);
+  box-shadow: 0 0 24px rgba(124,58,237,0.50);
+}
+
+/* ── MOBILE LAYOUT ── */
+@media (max-width: 768px) {
+  html, body { overflow: hidden; height: 100%; }
+  .tab-bar { display: flex; }
+  .app { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  .tab-panel { display: none; }
+  .tab-panel.tab-active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .left { border-right: none; padding: 16px 14px; gap: 16px; }
+  .center { justify-content: flex-start; padding: 14px 14px; gap: 14px; overflow-y: auto; }
+  .preview-top-label { display: none; }
+  .canvas-wrap { width: 100%; max-width: 100%; }
+  .space-hint { display: none; }
+  .tap-btn { display: block; }
+  .right { border-left: none; padding: 14px 12px; }
+  .topbar { height: 48px; padding: 0 14px; gap: 10px; }
+  .logo-sub { display: none; }
+  .tbtn { padding: 7px 12px; font-size: 9px; }
+  .bottom { margin-bottom: 62px; }
+  .play-btn { width: 54px; height: 54px; font-size: 20px; }
+  .player-card { padding: 14px; }
+  .player-wave { height: 64px; }
+  .seek-bar { height: 6px; }
+  .upload-zone { padding: 24px 12px; }
+  .upload-icon { font-size: 26px; }
+  .sbtn { padding: 12px 14px; }
+}
+@media (max-width: 380px) {
+  .tbtn { padding: 5px 9px; font-size: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">danixsik</div>
+  <span class="logo-sub">lyrics maker</span>
+  <div class="topbar-right">
+    <button class="tbtn tbtn-ghost" id="previewBtn">Превью</button>
+    <button class="tbtn tbtn-red" id="exportBtn" disabled>Экспорт</button>
+  </div>
+</div>
+
+<!-- MOBILE TAB BAR -->
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="left"><span class="tab-icon">&#9965;</span>Настройки</button>
+  <button class="tab-btn" data-tab="center"><span class="tab-icon">&#9654;</span>Превью</button>
+  <button class="tab-btn" data-tab="right"><span class="tab-icon">&#8801;</span>Строки</button>
+</div>
+
+<div class="app">
+
+  <!-- LEFT PANEL -->
+  <div class="left tab-panel tab-active" id="panelLeft">
+
+    <!-- Audio -->
+    <div>
+      <span class="slabel">Аудио</span>
+      <input type="file" id="audioInput" accept="audio/*" style="display:none">
+      <label class="upload-zone" for="audioInput" id="audioZone">
+        <div class="upload-icon">&#9834;</div>
+        <p>MP3 или WAV</p>
+        <div class="upload-name" id="audioName"></div>
+      </label>
+
+      <!-- PLAYER CARD -->
+      <div class="player-card" id="playerCard" style="display:none">
+        <canvas class="player-wave" id="waveformCanvas"></canvas>
+        <div class="player-times">
+          <span id="timeCur">0:00</span>
+          <span id="timeDur">0:00</span>
+        </div>
+        <div class="player-controls">
+          <button class="play-btn" id="playBtn">&#9654;</button>
+          <div class="seek-wrap">
+            <input type="range" class="seek-bar" id="seekBar" min="0" max="1000" value="0" step="1">
+            <div class="vol-row">
+              <span>&#128264;</span>
+              <input type="range" class="vol-bar" id="volBar" min="0" max="1" step="0.01" value="1">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text -->
+    <div>
+      <span class="slabel">Текст — каждая строка с новой строки</span>
+      <textarea class="lyrics" id="lyricsInput" placeholder="привет как дела&#10;что делаешь?&#10;нормально ты как&#10;и ты че как итак.."></textarea>
+      <div class="btn-row">
+        <button class="sbtn main" id="loadBtn">Загрузить строки</button>
+        <button class="sbtn" id="clearBtn">Очистить</button>
+      </div>
+    </div>
+
+    <!-- Timing / Play -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="timing-label">
+        Тайминг строк — <span class="pill">Пробел</span>
+      </div>
+      <div class="next-txt" id="nextTxt">Следующая: —</div>
+    </div>
+
+    <!-- Style -->
+    <div class="style-section">
+      <span class="slabel">Вид текста</span>
+
+      <div class="ctrl-row">
+        <div class="ctrl">
+          <span class="slabel">Цвет текста</span>
+          <div class="color-block" id="textColorBlock">
+            <div class="color-bg" id="textColorBg" style="background:#ffffff"></div>
+            <input type="color" id="textColor" value="#ffffff">
+          </div>
+        </div>
+        <div class="ctrl">
+          <span class="slabel">Фон (хромакей)</span>
+          <div class="color-block" id="bgColorBlock">
+            <div class="color-bg" id="bgColorBg" style="background:#00b140"></div>
+            <input type="color" id="bgColor" value="#00b140">
+          </div>
+        </div>
+      </div>
+
+      <div class="ctrl">
+        <div class="range-row">
+          <span class="slabel" style="margin:0">Размер</span>
+          <span class="range-val" id="fontSizeVal">20</span>
+        </div>
+        <input type="range" id="fontSize" min="1" max="200" value="20">
+      </div>
+
+      <div class="ctrl-row">
+        <div class="ctrl">
+          <span class="slabel">Анимация</span>
+          <select id="animation">
+            <option value="fade">Fade</option>
+            <option value="slide">Slide Up</option>
+            <option value="pop">Pop</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div class="ctrl">
+          <span class="slabel">Шрифт</span>
+          <select id="fontFamily">
+            <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+            <option value="'Montserrat', sans-serif">Montserrat</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Impact, sans-serif">Impact</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ctrl">
+        <span class="slabel">Обводка</span>
+        <div class="outline-row">
+          <input type="checkbox" id="outlineOn">
+          <div class="color-block" style="width:32px;height:22px;flex-shrink:0">
+            <div class="color-bg" id="outColorBg" style="background:#000000"></div>
+            <input type="color" id="outlineColor" value="#000000">
+          </div>
+          <input type="range" id="outlineW" min="0" max="20" value="4" style="flex:1">
+          <span class="range-val" id="outlineWVal">4</span>
+        </div>
+      </div>
+
+      <div class="ctrl">
+        <span class="slabel">Свой шрифт (TTF / OTF)</span>
+        <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+        <label class="font-upload" for="fontInput">
+          <p>Нажми чтобы выбрать файл</p>
+        </label>
+      </div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- CENTER -->
+  <div class="center tab-panel" id="panelCenter">
+    <div class="preview-top-label">Предпросмотр 1:1</div>
+    <div class="canvas-wrap">
+      <canvas id="previewCanvas" width="1080" height="1080"></canvas>
+    </div>
+    <div class="space-hint">
+      <div class="space-key" id="spaceKey">Пробел</div>
+      <span>= следующая строка</span>
+    </div>
+    <button class="tap-btn" id="tapBtn">Следующая строка</button>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right tab-panel" id="panelRight">
+    <div class="right-header">
+      <span class="slabel">Строки</span>
+      <span class="space-tag">Пробел = тайминг</span>
+    </div>
+    <div id="linesList"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- BOTTOM -->
+<div class="bottom">
+  <div class="status-dot" id="statusDot"></div>
+  <div class="status-msg" id="statusMsg">Ожидание</div>
+  <div class="exp-bar"><div class="exp-fill" id="expFill"></div></div>
+  <div class="bottom-logo">danixsik</div>
+</div>
+
+<audio id="player" style="display:none"></audio>
+
+<script>
+// ── STATE ──
+const S = {
+  audioFile: null,
+  audioDur: 0,
+  lines: [],
+  curLine: -1,
+  playing: false,
+  timingMode: false,
+  animRaf: null,
+  textColor: '#ffffff',
+  bgColor: '#00b140',
+  fontSize: 20,
+  fontFamily: "'Bebas Neue', sans-serif",
+  anim: 'fade',
+  outlineOn: false,
+  outlineColor: '#000000',
+  outlineW: 4,
+  waveData: null,
+};
+
+const player = document.getElementById('player');
+const canvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+const wc = document.getElementById('waveformCanvas');
+const wctx = wc.getContext('2d');
+
+// ── DRAW ──
+function drawFrame(text, prog = 1) {
+  const W = 1080, H = 1080;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = S.bgColor;
+  ctx.fillRect(0, 0, W, H);
+  if (!text) return;
+
+  let alpha = 1, dy = 0, sc = 1;
+  if (S.anim === 'fade') alpha = prog;
+  else if (S.anim === 'slide') { alpha = prog; dy = (1 - prog) * 50; }
+  else if (S.anim === 'pop') { sc = 0.6 + prog * 0.4; alpha = prog; }
+
+  const ease = 1 - Math.pow(1 - Math.min(prog, 1), 3);
+  if (S.anim === 'pop') {
+    ctx.save();
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(0.6 + ease * 0.4, 0.6 + ease * 0.4);
+    ctx.translate(-W / 2, -H / 2);
+  } else ctx.save();
+
+  ctx.globalAlpha = S.anim === 'none' ? 1 : ease;
+  const sz = S.fontSize * 5;
+  ctx.font = `${sz}px ${S.fontFamily}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // word wrap
+  const words = text.split(' ');
+  const maxW = W - 140;
+  const wrapped = [];
+  let cur = '';
+  for (const w of words) {
+    const t = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && cur) { wrapped.push(cur); cur = w; }
+    else cur = t;
+  }
+  if (cur) wrapped.push(cur);
+
+  const lh = sz * 1.25;
+  const totalH = wrapped.length * lh;
+  let sy = H / 2 - totalH / 2 + lh / 2 + (S.anim === 'slide' ? dy * (1 - ease) : 0);
+
+  wrapped.forEach((line, i) => {
+    const y = sy + i * lh;
+    if (S.outlineOn && S.outlineW > 0) {
+      ctx.strokeStyle = S.outlineColor;
+      ctx.lineWidth = S.outlineW * 3;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(line, W / 2, y);
+    }
+    ctx.fillStyle = S.textColor;
+    ctx.fillText(line, W / 2, y);
+  });
+
+  ctx.restore();
+}
+
+function animTo(text) {
+  if (S.animRaf) cancelAnimationFrame(S.animRaf);
+  if (S.anim === 'none') { drawFrame(text, 1); return; }
+  const start = performance.now();
+  const dur = 200;
+  function tick(now) {
+    const t = Math.min((now - start) / dur, 1);
+    drawFrame(text, t);
+    if (t < 1) S.animRaf = requestAnimationFrame(tick);
+  }
+  S.animRaf = requestAnimationFrame(tick);
+}
+
+// ── WAVEFORM ──
+function drawWave(buf) {
+  const data = buf.getChannelData(0);
+  const W = wc.offsetWidth || 268;
+  const H = 36;
+  wc.width = W; wc.height = H;
+  wctx.clearRect(0, 0, W, H);
+  const step = Math.floor(data.length / W);
+  for (let x = 0; x < W; x++) {
+    let max = 0;
+    for (let j = 0; j < step; j++) { const v = Math.abs(data[x * step + j]); if (v > max) max = v; }
+    const h = max * H;
+    wctx.fillStyle = 'rgba(255,255,255,0.22)';
+    wctx.fillRect(x, H / 2 - h / 2, 1, h || 1);
+  }
+  S.waveData = wctx.getImageData(0, 0, W, H);
+}
+
+function updateWavePos() {
+  if (!S.audioDur || !S.waveData) return;
+  const W = wc.width, H = wc.height;
+  wctx.putImageData(S.waveData, 0, 0);
+  const x = (player.currentTime / S.audioDur) * W;
+  wctx.fillStyle = 'rgba(224,48,48,0.7)';
+  wctx.fillRect(Math.floor(x), 0, 2, H);
+}
+
+// ── LINES ──
+function loadLines() {
+  const raw = document.getElementById('lyricsInput').value;
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  S.lines = lines.map(t => ({ text: t, time: null }));
+  S.curLine = -1;
+  renderLines();
+  drawFrame(null);
+  setStatus('Строк: ' + lines.length, false);
+  document.getElementById('exportBtn').disabled = !S.audioFile;
+}
+
+function renderLines() {
+  const list = document.getElementById('linesList');
+  list.innerHTML = '';
+  S.lines.forEach((ln, i) => {
+    const el = document.createElement('div');
+    el.className = 'line-item' +
+      (i === S.curLine ? ' active' : '') +
+      (ln.time !== null ? ' done' : '');
+    el.innerHTML =
+      `<span class="lnum">${i + 1}</span>` +
+      `<span class="ltext">${ln.text}</span>` +
+      `<span class="ltime">${ln.time !== null ? fmt(ln.time) : ''}</span>`;
+    el.addEventListener('click', () => {
+      S.curLine = i; animTo(ln.text); renderLines(); updateNext();
+    });
+    list.appendChild(el);
+  });
+}
+
+function updateNext() {
+  const n = S.lines[S.curLine + 1];
+  document.getElementById('nextTxt').textContent = 'Следующая: ' + (n ? n.text : '—');
+}
+
+function scrollActive() {
+  const a = document.querySelector('.line-item.active');
+  if (a) a.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── AUDIO SYNC ──
+player.addEventListener('timeupdate', () => {
+  const c = player.currentTime, d = player.duration || 0;
+  document.getElementById('timeCur').textContent = fmt(c);
+  document.getElementById('timeDur').textContent = fmt(d);
+  if (!S.seeking) document.getElementById('seekBar').value = d ? Math.round((c / d) * 1000) : 0;
+  updateWavePos();
+
+  // auto show timed lines in preview mode
+  if (!S.timingMode && S.lines.some(l => l.time !== null)) {
+    let active = -1;
+    S.lines.forEach((l, i) => { if (l.time !== null && l.time <= c) active = i; });
+    if (active !== S.curLine && active >= 0) {
+      S.curLine = active;
+      animTo(S.lines[active].text);
+      renderLines();
+      updateNext();
+      scrollActive();
+    }
+  }
+});
+
+player.addEventListener('ended', () => {
+  S.playing = false; S.timingMode = false;
+  document.getElementById('playBtn').textContent = '▶';
+  document.getElementById('playBtn').classList.remove('active');
+  document.getElementById('statusDot').classList.remove('on');
+  setStatus('Готово', false);
+});
+
+// ── SPACEBAR ──
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space') return;
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  e.preventDefault();
+
+  const key = document.getElementById('spaceKey');
+  key.classList.add('flash');
+  setTimeout(() => key.classList.remove('flash'), 120);
+
+  if (!S.playing) {
+    if (!S.audioFile) { setStatus('Сначала загрузи аудио', false); return; }
+    if (!S.lines.length) { setStatus('Сначала загрузи строки', false); return; }
+    // reset timings, start
+    S.lines.forEach(l => l.time = null);
+    S.curLine = -1;
+    S.timingMode = true;
+    S.playing = true;
+    player.currentTime = 0;
+    player.play();
+    document.getElementById('playBtn').textContent = '■';
+    document.getElementById('playBtn').classList.add('active');
+    document.getElementById('statusDot').classList.add('on');
+    setStatus('Запись тайминга...', true);
+    renderLines();
+    updateNext();
+  } else {
+    // next line
+    S.curLine++;
+    if (S.curLine < S.lines.length) {
+      S.lines[S.curLine].time = player.currentTime;
+      animTo(S.lines[S.curLine].text);
+      renderLines();
+      updateNext();
+      scrollActive();
+    } else {
+      stopAudio();
+      setStatus('Тайминг записан ✓', false);
+      document.getElementById('exportBtn').disabled = false;
+    }
+  }
+});
+
+function stopAudio() {
+  player.pause(); player.currentTime = 0;
+  S.playing = false; S.timingMode = false;
+  document.getElementById('playBtn').textContent = '▶';
+  document.getElementById('playBtn').classList.remove('active');
+  document.getElementById('statusDot').classList.remove('on');
+}
+
+// ── EXPORT ──
+async function doExport() {
+  if (!S.audioFile || !S.lines.length) return;
+  document.getElementById('exportBtn').disabled = true;
+  setStatus('Экспорт...', true);
+
+  const W = 1080, H = 1080, FPS = 30;
+  const ec = document.createElement('canvas');
+  ec.width = W; ec.height = H;
+  const ectx = ec.getContext('2d');
+  const totalMs = (S.audioDur || 30) * 1000 + 500;
+  const stream = ec.captureStream(FPS);
+
+  try {
+    const audioCtx = new AudioContext();
+    const ab = await S.audioFile.arrayBuffer();
+    const dec = await audioCtx.decodeAudioData(ab);
+    const src = audioCtx.createBufferSource();
+    src.buffer = dec;
+    const dest = audioCtx.createMediaStreamDestination();
+    src.connect(dest); src.start(0);
+    dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+  } catch(e) {}
+
+  const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
+  const chunks = [];
+  rec.ondataavailable = e => chunks.push(e.data);
+  rec.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `danixsik_${Date.now()}.webm`;
+    a.click();
+    setStatus('Сохранено ✓', false);
+    document.getElementById('exportBtn').disabled = false;
+    document.getElementById('expFill').style.width = '0%';
+  };
+  rec.start();
+
+  function getLine(ms) {
+    let r = null;
+    S.lines.forEach(l => { if (l.time !== null && l.time * 1000 <= ms) r = l.text; });
+    return r;
+  }
+
+  function drawEx(text, p) {
+    ectx.clearRect(0, 0, W, H);
+    ectx.fillStyle = S.bgColor;
+    ectx.fillRect(0, 0, W, H);
+    if (!text) return;
+    const ease = 1 - Math.pow(1 - Math.min(p, 1), 3);
+    ectx.save();
+    ectx.globalAlpha = S.anim === 'none' ? 1 : ease;
+    const sz = S.fontSize * 5;
+    ectx.font = `${sz}px ${S.fontFamily}`;
+    ectx.textAlign = 'center'; ectx.textBaseline = 'middle';
+    const words = text.split(' '), wrapped = [], maxW = W - 140;
+    let cur = '';
+    for (const w of words) {
+      const t = cur ? cur + ' ' + w : w;
+      if (ectx.measureText(t).width > maxW && cur) { wrapped.push(cur); cur = w; } else cur = t;
+    }
+    if (cur) wrapped.push(cur);
+    const lh = sz * 1.25, totalH = wrapped.length * lh;
+    let sy = H / 2 - totalH / 2 + lh / 2 + (S.anim === 'slide' ? (1 - ease) * 50 : 0);
+    wrapped.forEach((line, i) => {
+      const y = sy + i * lh;
+      if (S.outlineOn && S.outlineW > 0) {
+        ectx.strokeStyle = S.outlineColor; ectx.lineWidth = S.outlineW * 3;
+        ectx.lineJoin = 'round'; ectx.strokeText(line, W / 2, y);
+      }
+      ectx.fillStyle = S.textColor; ectx.fillText(line, W / 2, y);
+    });
+    ectx.restore();
+  }
+
+  const frameMs = 1000 / FPS;
+  let elapsed = 0, lastText = null, lineStart = 0;
+
+  function nextFrame() {
+    if (elapsed >= totalMs) { rec.stop(); return; }
+    const text = getLine(elapsed);
+    if (text !== lastText) { lastText = text; lineStart = elapsed; }
+    const age = elapsed - lineStart;
+    const p = S.anim === 'none' ? 1 : Math.min(age / 200, 1);
+    drawEx(text, p);
+    elapsed += frameMs;
+    const pct = (elapsed / totalMs) * 100;
+    document.getElementById('expFill').style.width = pct + '%';
+    setStatus('Экспорт: ' + Math.round(pct) + '%', true);
+    setTimeout(nextFrame, frameMs);
+  }
+  nextFrame();
+}
+
+// ── UTILS ──
+function fmt(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+function setStatus(msg, active) {
+  document.getElementById('statusMsg').textContent = msg;
+  document.getElementById('statusDot').classList.toggle('on', !!active);
+}
+function redraw() {
+  const ln = S.lines[S.curLine];
+  drawFrame(ln ? ln.text : null, 1);
+}
+
+// ── EVENTS ──
+document.getElementById('audioInput').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  S.audioFile = file;
+  player.src = URL.createObjectURL(file);
+  document.getElementById('audioName').textContent = file.name;
+  try {
+    const ab = await file.arrayBuffer();
+    const audioCtx = new AudioContext();
+    const dec = await audioCtx.decodeAudioData(ab);
+    S.audioDur = dec.duration;
+    drawWave(dec);
+  } catch(e) {}
+  setStatus('Аудио загружено', false);
+  if (S.lines.length) document.getElementById('exportBtn').disabled = false;
+  document.getElementById('playerCard').style.display = 'flex';
+});
+
+document.getElementById('loadBtn').addEventListener('click', loadLines);
+document.getElementById('clearBtn').addEventListener('click', () => {
+  S.lines = []; S.curLine = -1;
+  document.getElementById('linesList').innerHTML = '';
+  drawFrame(null); setStatus('Очищено', false);
+  document.getElementById('exportBtn').disabled = true;
+});
+
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (!S.audioFile) { setStatus('Загрузи аудио', false); return; }
+  if (S.playing) {
+    stopAudio(); setStatus('Пауза', false);
+  } else {
+    player.play(); S.playing = true;
+    document.getElementById('playBtn').textContent = '■';
+    document.getElementById('playBtn').classList.add('active');
+    document.getElementById('statusDot').classList.add('on');
+    setStatus('Воспроизведение', true);
+  }
+});
+
+// Seek bar
+S.seeking = false;
+const seekBar = document.getElementById('seekBar');
+seekBar.addEventListener('mousedown', () => S.seeking = true);
+seekBar.addEventListener('touchstart', () => S.seeking = true);
+seekBar.addEventListener('input', () => {
+  if (!S.audioDur) return;
+  player.currentTime = (seekBar.value / 1000) * S.audioDur;
+});
+seekBar.addEventListener('change', () => { S.seeking = false; });
+
+// Volume
+document.getElementById('volBar').addEventListener('input', e => {
+  player.volume = e.target.value;
+});
+
+// Waveform click to seek
+document.getElementById('waveformCanvas').addEventListener('click', e => {
+  if (!S.audioDur) return;
+  const el = document.getElementById('waveformCanvas');
+  const r = el.getBoundingClientRect();
+  player.currentTime = ((e.clientX - r.left) / r.width) * S.audioDur;
+});
+
+document.getElementById('textColor').addEventListener('input', e => {
+  S.textColor = e.target.value;
+  document.getElementById('textColorBg').style.background = e.target.value;
+  redraw();
+});
+document.getElementById('bgColor').addEventListener('input', e => {
+  S.bgColor = e.target.value;
+  document.getElementById('bgColorBg').style.background = e.target.value;
+  redraw();
+});
+document.getElementById('fontSize').addEventListener('input', e => {
+  S.fontSize = parseInt(e.target.value);
+  document.getElementById('fontSizeVal').textContent = S.fontSize;
+  redraw();
+});
+document.getElementById('animation').addEventListener('change', e => { S.anim = e.target.value; });
+document.getElementById('fontFamily').addEventListener('change', e => { S.fontFamily = e.target.value; redraw(); });
+document.getElementById('outlineOn').addEventListener('change', e => { S.outlineOn = e.target.checked; redraw(); });
+document.getElementById('outlineColor').addEventListener('input', e => {
+  S.outlineColor = e.target.value;
+  document.getElementById('outColorBg').style.background = e.target.value;
+  redraw();
+});
+document.getElementById('outlineW').addEventListener('input', e => {
+  S.outlineW = parseInt(e.target.value);
+  document.getElementById('outlineWVal').textContent = S.outlineW;
+  redraw();
+});
+
+document.getElementById('fontInput').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  const url = URL.createObjectURL(file);
+  const name = 'Custom_' + Date.now();
+  const font = new FontFace(name, `url(${url})`);
+  await font.load();
+  document.fonts.add(font);
+  S.fontFamily = `'${name}', sans-serif`;
+  const sel = document.getElementById('fontFamily');
+  const opt = document.createElement('option');
+  opt.value = S.fontFamily;
+  opt.textContent = file.name.replace(/\.[^.]+$/, '');
+  opt.selected = true;
+  sel.appendChild(opt);
+  redraw();
+});
+
+document.getElementById('previewBtn').addEventListener('click', () => {
+  if (!S.audioFile) { setStatus('Загрузи аудио', false); return; }
+  if (!S.lines.some(l => l.time !== null)) { setStatus('Сначала задай тайминг (Пробел)', false); return; }
+  stopAudio();
+  S.curLine = -1; S.timingMode = false;
+  player.currentTime = 0; player.play();
+  S.playing = true;
+  drawFrame(null);
+  document.getElementById('playBtn').textContent = '■';
+  document.getElementById('playBtn').classList.add('active');
+  document.getElementById('statusDot').classList.add('on');
+  setStatus('Предпросмотр...', true);
+});
+
+document.getElementById('exportBtn').addEventListener('click', doExport);
+
+drawFrame(null);
+
+// ── MOBILE TABS ──
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    const map = { left: 'panelLeft', center: 'panelCenter', right: 'panelRight' };
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-active'));
+    document.getElementById(map[tab]).classList.add('tab-active');
+  });
+});
+
+// ── TAP BUTTON (mobile timing) ──
+document.getElementById('tapBtn').addEventListener('click', e => {
+  e.preventDefault();
+  // Flash space key for visual feedback
+  const key = document.getElementById('spaceKey');
+  key.classList.add('flash');
+  setTimeout(() => key.classList.remove('flash'), 120);
+
+  if (!S.playing) {
+    if (!S.audioFile) { setStatus('Сначала загрузи аудио', false); return; }
+    if (!S.lines.length) { setStatus('Сначала загрузи строки', false); return; }
+    S.lines.forEach(l => l.time = null);
+    S.curLine = -1; S.timingMode = true; S.playing = true;
+    player.currentTime = 0; player.play();
+    document.getElementById('playBtn').textContent = '■';
+    document.getElementById('playBtn').classList.add('active');
+    document.getElementById('statusDot').classList.add('on');
+    setStatus('Запись тайминга...', true);
+    renderLines(); updateNext();
+    document.getElementById('tapBtn').textContent = S.lines[0] ? S.lines[0].text : 'Следующая строка';
+  } else {
+    S.curLine++;
+    if (S.curLine < S.lines.length) {
+      S.lines[S.curLine].time = player.currentTime;
+      animTo(S.lines[S.curLine].text);
+      renderLines(); updateNext(); scrollActive();
+      const next = S.lines[S.curLine + 1];
+      document.getElementById('tapBtn').textContent = next ? next.text : 'Завершить';
+    } else {
+      stopAudio();
+      setStatus('Тайминг записан ✓', false);
+      document.getElementById('exportBtn').disabled = false;
+      document.getElementById('tapBtn').textContent = 'Следующая строка';
+    }
+  }
+});
+
+// Switch to preview tab on mobile when preview starts
+const _origPreviewClick = document.getElementById('previewBtn').onclick;
+document.getElementById('previewBtn').addEventListener('click', () => {
+  if (window.innerWidth <= 768) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-tab="center"]').classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-active'));
+    document.getElementById('panelCenter').classList.add('tab-active');
+  }
+});
+
+</script>
+</body>
+</html>
